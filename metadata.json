@@ -1,0 +1,8 @@
+{
+  "name": "Auto Hub Platform",
+  "description": "A comprehensive automotive marketplace with a public frontend for browsing and booking, and a powerful admin dashboard for managing inventory, bookings, and analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
