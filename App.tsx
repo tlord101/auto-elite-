@@ -12,6 +12,7 @@ import Sell from './pages/Sell';
 import Financing from './pages/Financing';
 import TestDrive from './pages/TestDrive';
 import Contact from './pages/Contact';
+import AIChatAssistant from './components/AIChatAssistant';
 import { MOCK_VEHICLES } from './constants';
 import { Vehicle } from './types';
 
@@ -35,26 +36,27 @@ const App: React.FC = () => {
     <HashRouter>
       <div className="flex flex-col min-h-screen">
         <Routes>
-          <Route path="/" element={<PublicLayout><Home vehicles={vehicles} /></PublicLayout>} />
-          <Route path="/browse" element={<PublicLayout><Browse vehicles={vehicles} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
-          <Route path="/vehicle/:id" element={<PublicLayout><Details vehicles={vehicles} incrementViews={incrementViews} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
-          <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
-          <Route path="/sell" element={<PublicLayout><Sell /></PublicLayout>} />
-          <Route path="/financing" element={<PublicLayout><Financing /></PublicLayout>} />
-          <Route path="/test-drive" element={<PublicLayout><TestDrive vehicles={vehicles} /></PublicLayout>} />
-          <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+          <Route path="/" element={<PublicLayout vehicles={vehicles}><Home vehicles={vehicles} /></PublicLayout>} />
+          <Route path="/browse" element={<PublicLayout vehicles={vehicles}><Browse vehicles={vehicles} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
+          <Route path="/vehicle/:id" element={<PublicLayout vehicles={vehicles}><Details vehicles={vehicles} incrementViews={incrementViews} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
+          <Route path="/about" element={<PublicLayout vehicles={vehicles}><About /></PublicLayout>} />
+          <Route path="/sell" element={<PublicLayout vehicles={vehicles}><Sell /></PublicLayout>} />
+          <Route path="/financing" element={<PublicLayout vehicles={vehicles}><Financing /></PublicLayout>} />
+          <Route path="/test-drive" element={<PublicLayout vehicles={vehicles}><TestDrive vehicles={vehicles} /></PublicLayout>} />
+          <Route path="/contact" element={<PublicLayout vehicles={vehicles}><Contact /></PublicLayout>} />
         </Routes>
       </div>
     </HashRouter>
   );
 };
 
-const PublicLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const PublicLayout: React.FC<{ children: React.ReactNode; vehicles: Vehicle[] }> = ({ children, vehicles }) => (
   <>
     <Navbar />
     <main className="flex-grow pt-16">
       {children}
     </main>
+    <AIChatAssistant vehicles={vehicles} />
     <Footer />
   </>
 );
