@@ -386,7 +386,7 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
                           </div>
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end space-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end space-x-3 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={() => handleEdit(v)}
                               className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-xl rounded-2xl transition-all"
