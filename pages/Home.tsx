@@ -2,16 +2,20 @@
 import React from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { Link } = ReactRouterDOM;
-import { Vehicle } from '../types';
+import { SiteSettings, Vehicle } from '../types';
 import { CATEGORIES } from '../constants';
 import VehicleCard from '../components/VehicleCard';
 
 interface HomeProps {
   vehicles: Vehicle[];
+  siteSettings: SiteSettings;
 }
 
-const Home: React.FC<HomeProps> = ({ vehicles }) => {
+const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
   const featuredVehicles = vehicles.filter(v => v.isFeatured || v.status === 'available').slice(0, 3);
+  const heroParts = siteSettings.heroTitle.split(' ');
+  const heroFirstLine = heroParts.length > 2 ? heroParts.slice(0, 2).join(' ') : siteSettings.heroTitle;
+  const heroHighlight = heroParts.length > 2 ? heroParts.slice(2).join(' ') : '';
 
   const getCategoryCount = (catId: string) => {
     return vehicles.filter(v => v.category === catId).length;
@@ -23,20 +27,27 @@ const Home: React.FC<HomeProps> = ({ vehicles }) => {
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000" 
+            src={siteSettings.heroImageUrl}
             alt="Premium Automotive Hero" 
             className="w-full h-full object-cover brightness-[0.35] scale-105"
           />
         </div>
         <div className="relative z-10 text-center text-white px-4 max-w-5xl">
           <div className="inline-block px-4 py-1.5 bg-indigo-600/20 backdrop-blur-md border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-bold uppercase tracking-[0.2em] mb-8">
-            Welcome to the Elite Circle
+            {siteSettings.heroBadge}
           </div>
           <h1 className="text-6xl md:text-8xl font-black mb-8 tracking-tighter leading-[0.9]">
-            DRIVE THE <br/><span className="text-indigo-500">EXCEPTIONAL</span>
+            {heroHighlight ? (
+              <>
+                {heroFirstLine} <br/>
+                <span className="text-indigo-500">{heroHighlight}</span>
+              </>
+            ) : (
+              <span className="text-indigo-500">{heroFirstLine}</span>
+            )}
           </h1>
           <p className="text-lg md:text-2xl mb-12 text-slate-300 max-w-2xl mx-auto font-medium">
-            Curated premium inventory for the modern connoisseur. Experience unparalleled quality and service.
+            {siteSettings.heroSubtitle}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             <Link to="/browse" className="px-10 py-5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold transition-all text-lg shadow-2xl shadow-indigo-600/20 active:scale-95">

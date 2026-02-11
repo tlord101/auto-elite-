@@ -1,26 +1,34 @@
 
-import React, { useState } from 'react';
-import { Booking } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
+import { Booking, Vehicle } from '../../types';
+import { db } from '../../firebaseClient';
+import { mapBookingDoc } from '../../firebaseData';
 
-const AdminBookings: React.FC = () => {
-  const [bookings, setBookings] = useState<Booking[]>([
-    { 
-        id: 'b1', 
-        vehicleId: 'v1', 
-        vehicleName: '2024 Audi R8 V10',
-        customerName: 'James Wilson', 
-        email: 'james@example.com', 
-        phone: '+123456789', 
-        driversLicense: 'DL9988221',
-        date: '2024-05-20', 
-        time: '14:00', 
-        location: 'Downtown Showroom',
-        status: 'pending' 
-    }
-  ]);
+interface AdminBookingsProps {
+  vehicles: Vehicle[];
+}
+
+const AdminBookings: React.FC<AdminBookingsProps> = ({ vehicles }) => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    const bookingsQuery = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
+    return onSnapshot(bookingsQuery, (snapshot) => {
+      setBookings(snapshot.docs.map(mapBookingDoc));
+    });
+  }, []);
 
   const updateStatus = (id: string, status: Booking['status']) => {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+    updateDoc(doc(db, 'bookings', id), { status }).catch((error) => {
+      console.error('Failed to update booking status', error);
+    });
+  };
+
+  const getVehicleName = (booking: Booking) => {
+    if (booking.vehicleName) return booking.vehicleName;
+    const match = vehicles.find((v) => v.id === booking.vehicleId);
+    return match?.name || 'Unknown Vehicle';
   };
 
   return (
@@ -49,7 +57,7 @@ const AdminBookings: React.FC = () => {
                   <p className="text-[10px] text-slate-400 font-bold">{b.email}</p>
                   <p className="text-[10px] text-indigo-600 font-black uppercase mt-1">ID: {b.driversLicense}</p>
                 </td>
-                <td className="px-8 py-6 font-bold text-slate-700 text-xs uppercase">{b.vehicleName}</td>
+                <td className="px-8 py-6 font-bold text-slate-700 text-xs uppercase">{getVehicleName(b)}</td>
                 <td className="px-8 py-6">
                   <p className="font-bold text-slate-900 text-xs">{b.date} • {b.time}</p>
                   <p className="text-[10px] text-slate-500 font-black uppercase">{b.location}</p>

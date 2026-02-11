@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { Link } = ReactRouterDOM;
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebaseClient';
 
 interface FinancePlan {
   months: number;
@@ -14,6 +16,9 @@ const Financing: React.FC = () => {
   const [vehiclePrice, setVehiclePrice] = useState(35000);
   const [downPayment, setDownPayment] = useState(7000);
   const [selectedTerm, setSelectedTerm] = useState(36);
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [submitStatus, setSubmitStatus] = useState('');
 
   const plans: FinancePlan[] = [
     { months: 36, apr: 7.9, label: 'Popular', isPopular: true },
@@ -35,6 +40,29 @@ const Financing: React.FC = () => {
 
   const inputClass = "w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-black outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:font-medium";
   const labelClass = "text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block";
+
+  const handleFinancingRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitStatus('');
+
+    try {
+      await addDoc(collection(db, 'financingRequests'), {
+        customerName,
+        email: customerEmail,
+        loanAmount,
+        downPayment,
+        term: activePlan.months,
+        status: 'pending',
+        createdAt: serverTimestamp()
+      });
+      setSubmitStatus('Request submitted. Our team will follow up shortly.');
+      setCustomerName('');
+      setCustomerEmail('');
+    } catch (error) {
+      console.error('Failed to submit financing request', error);
+      setSubmitStatus('Unable to submit request right now. Please try again.');
+    }
+  };
 
   return (
     <div className="space-y-0 pb-0">
@@ -215,6 +243,54 @@ const Financing: React.FC = () => {
                Contact for Custom Plans
              </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-4 pb-24">
+        <div className="bg-white p-10 md:p-14 rounded-[3rem] border border-slate-200 shadow-sm">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Request Pre-Approval</h2>
+            <p className="text-slate-500 font-medium">Send your details to start the financing process.</p>
+          </div>
+
+          <form onSubmit={handleFinancingRequest} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Full Name</label>
+                <input
+                  className={inputClass}
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Email</label>
+                <input
+                  type="email"
+                  className={inputClass}
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            {submitStatus && (
+              <div className={`text-sm font-bold text-center ${submitStatus.includes('submitted') ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {submitStatus}
+              </div>
+            )}
+
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                className="px-10 py-4 bg-indigo-600 text-white font-black rounded-2xl uppercase tracking-widest text-xs shadow-lg shadow-indigo-200"
+              >
+                Submit Request
+              </button>
+            </div>
+          </form>
         </div>
       </section>
     </div>

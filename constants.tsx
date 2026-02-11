@@ -1,9 +1,16 @@
 
-import React from 'react';
-import { Vehicle, VehicleCategory, VehicleCondition } from './types';
+import { Vehicle, VehicleCategory, SiteSettings } from './types';
 
 // Showroom inventory. In this version, the admin dashboard has been removed.
 export const MOCK_VEHICLES: Vehicle[] = [];
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  siteName: 'AutoElite',
+  heroBadge: 'Welcome to the Elite Circle',
+  heroTitle: 'DRIVE THE EXCEPTIONAL',
+  heroSubtitle: 'Curated premium inventory for the modern connoisseur. Experience unparalleled quality and service.',
+  heroImageUrl: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000'
+};
 
 export const CATEGORIES = [
   { 

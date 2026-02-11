@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { Link, useLocation } = ReactRouterDOM;
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  siteName: string;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ siteName }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
@@ -23,7 +27,7 @@ const Navbar: React.FC = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-2xl font-black text-indigo-600 uppercase tracking-tighter">AutoElite</span>
+              <span className="text-2xl font-black text-indigo-600 uppercase tracking-tighter">{siteName}</span>
             </Link>
           </div>
           

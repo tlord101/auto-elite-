@@ -1,31 +1,29 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { collection, deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { Vehicle, VehicleCategory, VehicleCondition } from '../../types';
+import { db, storage } from '../../firebaseClient';
 
 interface AdminVehiclesProps {
   vehicles: Vehicle[];
-  setVehicles: React.Dispatch<React.SetStateAction<Vehicle[]>>;
 }
 
-interface ImageEditorState {
-  index: number;
-  data: string;
-  brightness: number;
-  contrast: number;
-  saturation: number;
-  grayscale: number;
+interface ImageItem {
+  id: string;
+  url: string;
+  file?: File;
+  isNew: boolean;
 }
 
-const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) => {
+const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  
-  // Image Editor State
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editorState, setEditorState] = useState<ImageEditorState | null>(null);
-  const editorCanvasRef = useRef<HTMLCanvasElement>(null);
+  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   // Drag and Drop State
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -42,6 +40,9 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
     category: VehicleCategory.CAR,
     condition: VehicleCondition.NEW,
     fuelType: 'Gasoline',
+    transmission: 'Automatic',
+    bodyType: '',
+    location: 'Main Showroom',
     mileage: 0,
     description: '',
     images: [],
@@ -52,12 +53,21 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
       exteriorColor: '',
       interiorColor: ''
     },
-    status: 'available'
+    status: 'available',
+    isFeatured: false,
+    isVerified: false
   });
 
   useEffect(() => {
     if (editingVehicle) {
       setFormData(editingVehicle);
+      setImageItems(
+        editingVehicle.images.map((url) => ({
+          id: url,
+          url,
+          isNew: false
+        }))
+      );
     } else {
       setFormData({
         name: '',
@@ -68,6 +78,9 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
         category: VehicleCategory.CAR,
         condition: VehicleCondition.NEW,
         fuelType: 'Gasoline',
+        transmission: 'Automatic',
+        bodyType: '',
+        location: 'Main Showroom',
         mileage: 0,
         description: '',
         images: [],
@@ -78,8 +91,11 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
           exteriorColor: '',
           interiorColor: ''
         },
-        status: 'available'
+        status: 'available',
+        isFeatured: false,
+        isVerified: false
       });
+      setImageItems([]);
     }
   }, [editingVehicle, isModalOpen]);
 
@@ -98,7 +114,9 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this vehicle?')) {
-      setVehicles(prev => prev.filter(v => v.id !== id));
+      deleteDoc(doc(db, 'vehicles', id)).catch((error) => {
+        console.error('Failed to delete vehicle', error);
+      });
     }
   };
 
@@ -116,24 +134,18 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setFormData(prev => ({
-          ...prev,
-          images: [...(prev.images || []), base64String]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+    const newItems = Array.from(files).map((file) => ({
+      id: `${Date.now()}-${file.name}`,
+      url: URL.createObjectURL(file),
+      file,
+      isNew: true
+    }));
+
+    setImageItems((prev) => [...prev, ...newItems]);
   };
 
   const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images?.filter((_, i) => i !== index)
-    }));
+    setImageItems((prev) => prev.filter((_, i) => i !== index));
   };
 
   const onDragStart = (index: number) => {
@@ -144,76 +156,100 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index) return;
 
-    const newImages = [...(formData.images || [])];
-    const draggedItem = newImages[draggedIndex];
-    newImages.splice(draggedIndex, 1);
-    newImages.splice(index, 0, draggedItem);
-    
+    const newItems = [...imageItems];
+    const draggedItem = newItems[draggedIndex];
+    newItems.splice(draggedIndex, 1);
+    newItems.splice(index, 0, draggedItem);
+
     setDraggedIndex(index);
-    setFormData({ ...formData, images: newImages });
+    setImageItems(newItems);
   };
 
   const onDragEnd = () => {
     setDraggedIndex(null);
   };
 
-  const openEditor = (index: number, data: string) => {
-    setEditorState({
-      index,
-      data,
-      brightness: 100,
-      contrast: 100,
-      saturation: 100,
-      grayscale: 0
-    });
-    setIsEditorOpen(true);
-  };
-
-  const applyEdits = () => {
-    if (!editorState || !editorCanvasRef.current) return;
-
-    const canvas = editorCanvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = new Image();
-    img.src = editorState.data;
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.filter = `brightness(${editorState.brightness}%) contrast(${editorState.contrast}%) saturate(${editorState.saturation}%) grayscale(${editorState.grayscale}%)`;
-      ctx.drawImage(img, 0, 0);
-
-      const editedData = canvas.toDataURL('image/jpeg', 0.9);
-      const newImages = [...(formData.images || [])];
-      newImages[editorState.index] = editedData;
-      
-      setFormData({ ...formData, images: newImages });
-      setIsEditorOpen(false);
-      setEditorState(null);
-    };
-  };
-
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const vehicleData = {
-      ...formData,
-      id: editingVehicle?.id || Math.random().toString(36).substr(2, 9),
-      createdAt: editingVehicle?.createdAt || new Date().toISOString(),
-      name: `${formData.year} ${formData.brand} ${formData.model}`
-    } as Vehicle;
+    setSaveError('');
+    setIsSaving(true);
+    try {
+      const docRef = editingVehicle ? doc(db, 'vehicles', editingVehicle.id) : doc(collection(db, 'vehicles'));
+      const vehicleId = docRef.id;
 
-    if (editingVehicle) {
-      setVehicles(prev => prev.map(v => v.id === editingVehicle.id ? vehicleData : v));
-    } else {
-      setVehicles(prev => [vehicleData, ...prev]);
+      const uploadMap = new Map<string, string>();
+      const newImageItems = imageItems.filter((item) => item.isNew && item.file);
+
+      await Promise.all(
+        newImageItems.map(async (item) => {
+          const storageRef = ref(storage, `vehicles/${vehicleId}/${item.id}`);
+          await uploadBytes(storageRef, item.file as File);
+          const url = await getDownloadURL(storageRef);
+          uploadMap.set(item.id, url);
+        })
+      );
+
+      const finalImages = imageItems.map((item) => (item.isNew ? uploadMap.get(item.id) || '' : item.url)).filter(Boolean);
+
+      const safeSpecs = formData.specs || {
+        engine: '',
+        transmission: '',
+        drivetrain: '',
+        exteriorColor: '',
+        interiorColor: ''
+      };
+
+      const safePayload = {
+        brand: formData.brand || '',
+        model: formData.model || '',
+        year: Number(formData.year ?? new Date().getFullYear()),
+        price: Number(formData.price ?? 0),
+        category: formData.category || VehicleCategory.CAR,
+        condition: formData.condition || VehicleCondition.NEW,
+        fuelType: formData.fuelType || 'Gasoline',
+        transmission: formData.transmission || 'Automatic',
+        bodyType: formData.bodyType || '',
+        location: formData.location || 'Main Showroom',
+        mileage: Number(formData.mileage ?? 0),
+        description: formData.description || '',
+        status: formData.status || 'available',
+        isFeatured: Boolean(formData.isFeatured),
+        isVerified: Boolean(formData.isVerified)
+      };
+
+      const vehiclePayload = {
+        ...safePayload,
+        specs: safeSpecs,
+        name: `${safePayload.year} ${safePayload.brand} ${safePayload.model}`.trim(),
+        images: finalImages,
+        views: editingVehicle?.views ?? 0,
+        reviews: editingVehicle?.reviews ?? [],
+        updatedAt: serverTimestamp(),
+        ...(editingVehicle ? {} : { createdAt: serverTimestamp() })
+      } as Vehicle;
+
+      if (editingVehicle) {
+        await updateDoc(docRef, vehiclePayload);
+      } else {
+        await setDoc(docRef, vehiclePayload);
+      }
+
+      setIsModalOpen(false);
+      setEditingVehicle(null);
+    } catch (error) {
+      console.error('Failed to save vehicle', error);
+      setSaveError('Unable to save vehicle. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
+
+  const inputClass = "w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500";
+  const labelClass = "text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2 block";
 
   return (
     <div className="space-y-6 relative">
-      <canvas ref={editorCanvasRef} className="hidden" />
+      <canvas className="hidden" />
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -396,6 +432,322 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles, setVehicles }) 
           </div>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">
+                  {editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
+                </h2>
+                <p className="text-slate-500 text-sm font-medium">Manage inventory details and media</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-500 hover:text-slate-900"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSave} className="p-8 space-y-10 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Brand</label>
+                  <input
+                    className={inputClass}
+                    value={formData.brand || ''}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    placeholder="Tesla"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Model</label>
+                  <input
+                    className={inputClass}
+                    value={formData.model || ''}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    placeholder="Model S"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Year</label>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    value={formData.year || ''}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Price</label>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    value={formData.price || ''}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className={labelClass}>Category</label>
+                  <select
+                    className={inputClass}
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as VehicleCategory })}
+                  >
+                    {Object.values(VehicleCategory).map((cat) => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Condition</label>
+                  <select
+                    className={inputClass}
+                    value={formData.condition}
+                    onChange={(e) => setFormData({ ...formData, condition: e.target.value as VehicleCondition })}
+                  >
+                    {Object.values(VehicleCondition).map((cond) => (
+                      <option key={cond} value={cond}>{cond}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Status</label>
+                  <select
+                    className={inputClass}
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as Vehicle['status'] })}
+                  >
+                    <option value="available">available</option>
+                    <option value="pending">pending</option>
+                    <option value="sold">sold</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Fuel Type</label>
+                  <select
+                    className={inputClass}
+                    value={formData.fuelType}
+                    onChange={(e) => setFormData({ ...formData, fuelType: e.target.value as Vehicle['fuelType'] })}
+                  >
+                    <option value="Gasoline">Gasoline</option>
+                    <option value="Diesel">Diesel</option>
+                    <option value="Electric">Electric</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Transmission</label>
+                  <select
+                    className={inputClass}
+                    value={formData.transmission}
+                    onChange={(e) => setFormData({ ...formData, transmission: e.target.value as Vehicle['transmission'] })}
+                  >
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                    <option value="Semi-Auto">Semi-Auto</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Mileage</label>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    value={formData.mileage || ''}
+                    onChange={(e) => setFormData({ ...formData, mileage: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Body Type</label>
+                  <input
+                    className={inputClass}
+                    value={formData.bodyType || ''}
+                    onChange={(e) => setFormData({ ...formData, bodyType: e.target.value })}
+                    placeholder="SUV"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Location</label>
+                  <input
+                    className={inputClass}
+                    value={formData.location || ''}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Main Showroom"
+                  />
+                </div>
+                <div className="flex items-center gap-4 pt-6">
+                  <label className="flex items-center gap-2 text-xs font-black uppercase text-slate-500">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.isFeatured)}
+                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    Featured
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-black uppercase text-slate-500">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(formData.isVerified)}
+                      onChange={(e) => setFormData({ ...formData, isVerified: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    Verified
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelClass}>Description</label>
+                <textarea
+                  className={`${inputClass} min-h-[120px]`}
+                  value={formData.description || ''}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Add a detailed description of the vehicle..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className={labelClass}>Engine</label>
+                  <input
+                    className={inputClass}
+                    value={formData.specs?.engine || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      specs: { ...(formData.specs || {}), engine: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Spec Transmission</label>
+                  <input
+                    className={inputClass}
+                    value={formData.specs?.transmission || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      specs: { ...(formData.specs || {}), transmission: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Drivetrain</label>
+                  <input
+                    className={inputClass}
+                    value={formData.specs?.drivetrain || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      specs: { ...(formData.specs || {}), drivetrain: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Exterior Color</label>
+                  <input
+                    className={inputClass}
+                    value={formData.specs?.exteriorColor || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      specs: { ...(formData.specs || {}), exteriorColor: e.target.value }
+                    })}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Interior Color</label>
+                  <input
+                    className={inputClass}
+                    value={formData.specs?.interiorColor || ''}
+                    onChange={(e) => setFormData({
+                      ...formData,
+                      specs: { ...(formData.specs || {}), interiorColor: e.target.value }
+                    })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className={labelClass}>Images</label>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-5 py-2 bg-slate-900 text-white text-xs font-black uppercase rounded-xl"
+                  >
+                    Upload Images
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {imageItems.length === 0 ? (
+                  <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center text-slate-400 text-sm">
+                    No images uploaded yet.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {imageItems.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="relative rounded-2xl overflow-hidden border border-slate-100 shadow-sm"
+                        draggable
+                        onDragStart={() => onDragStart(index)}
+                        onDragOver={(e) => onDragOver(e, index)}
+                        onDragEnd={onDragEnd}
+                      >
+                        <img src={item.url} className="w-full h-32 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 text-slate-700 text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {saveError && (
+                <div className="text-rose-600 text-sm font-bold">{saveError}</div>
+              )}
+
+              <div className="flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-6 py-3 rounded-2xl border border-slate-200 text-slate-600 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-black uppercase text-xs tracking-widest disabled:opacity-70"
+                >
+                  {isSaving ? 'Saving...' : 'Save Vehicle'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

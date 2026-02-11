@@ -1,9 +1,25 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { FinancingRequest } from '../../types';
+import { db } from '../../firebaseClient';
+import { mapFinancingDoc } from '../../firebaseData';
 
 const AdminFinancing: React.FC = () => {
   const [requests, setRequests] = useState<FinancingRequest[]>([]);
+
+  useEffect(() => {
+    const financingQuery = query(collection(db, 'financingRequests'), orderBy('createdAt', 'desc'));
+    return onSnapshot(financingQuery, (snapshot) => {
+      setRequests(snapshot.docs.map(mapFinancingDoc));
+    });
+  }, []);
+
+  const updateStatus = (id: string, status: FinancingRequest['status']) => {
+    updateDoc(doc(db, 'financingRequests', id), { status }).catch((error) => {
+      console.error('Failed to update financing status', error);
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -46,8 +62,11 @@ const AdminFinancing: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl hover:bg-slate-100 transition-all border border-slate-100">
-                        Review Details
+                      <button
+                        onClick={() => updateStatus(r.id, 'reviewed')}
+                        className="text-xs font-bold text-slate-600 bg-slate-50 px-4 py-2 rounded-xl hover:bg-slate-100 transition-all border border-slate-100"
+                      >
+                        Mark Reviewed
                       </button>
                     </td>
                   </tr>

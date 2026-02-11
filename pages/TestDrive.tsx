@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { useSearchParams, Link } = ReactRouterDOM;
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Vehicle } from '../types';
+import { db } from '../firebaseClient';
 
 interface TestDriveProps {
   vehicles: Vehicle[];
@@ -37,6 +39,7 @@ const TestDrive: React.FC<TestDriveProps> = ({ vehicles }) => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -60,11 +63,32 @@ const TestDrive: React.FC<TestDriveProps> = ({ vehicles }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setSubmitError('');
+      try {
+        const vehicle = vehicles.find((v) => v.id === formData.vehicleId);
+        await addDoc(collection(db, 'bookings'), {
+          vehicleId: formData.vehicleId,
+          vehicleName: vehicle?.name || '',
+          customerName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          driversLicense: formData.driversLicense,
+          date: formData.date,
+          time: formData.time,
+          location: formData.location,
+          notes: formData.notes,
+          status: 'pending',
+          createdAt: serverTimestamp()
+        });
+        setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        console.error('Failed to submit booking', error);
+        setSubmitError('Unable to submit your request right now. Please try again.');
+      }
     }
   };
 
@@ -251,6 +275,12 @@ const TestDrive: React.FC<TestDriveProps> = ({ vehicles }) => {
                 </div>
 
                 <div>
+
+                {submitError && (
+                  <div className="text-rose-600 text-sm font-bold text-center">
+                    {submitError}
+                  </div>
+                )}
                   <label className={labelClass}>Showroom Location *</label>
                   <select 
                     value={formData.location}

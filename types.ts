@@ -20,6 +20,14 @@ export interface Review {
   date: string;
 }
 
+export interface SiteSettings {
+  siteName: string;
+  heroBadge: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImageUrl: string;
+}
+
 export interface Vehicle {
   id: string;
   name: string;

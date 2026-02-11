@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { useNavigate } = ReactRouterDOM;
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebaseClient';
 
-interface AdminLoginProps {
-  onLogin: () => void;
-}
-
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('password');
+const AdminLogin: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (auth.currentUser) {
+      navigate('/admin');
+    }
+  }, [navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, validate with API
-    onLogin();
-    navigate('/admin');
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigate('/admin');
+    } catch (err) {
+      setError('Invalid credentials or access not granted.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -28,15 +41,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         
         <form onSubmit={handleLogin} className="p-8 space-y-6">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Username</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Email</label>
             <div className="relative">
               <span className="absolute left-4 top-4 text-slate-400">👤</span>
               <input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="admin"
+                placeholder="admin@autoelite.com"
               />
             </div>
           </div>
@@ -55,15 +68,22 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
             </div>
           </div>
 
+          {error && (
+            <div className="text-rose-600 text-sm font-bold text-center">
+              {error}
+            </div>
+          )}
+
           <button 
             type="submit"
-            className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+            disabled={isSubmitting}
+            className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-70"
           >
-            Login to Dashboard
+            {isSubmitting ? 'Signing In...' : 'Login to Dashboard'}
           </button>
 
           <p className="text-center text-sm text-slate-500">
-            For demo purposes, just click login.
+            Access is restricted to authorized admins.
           </p>
         </form>
       </div>
