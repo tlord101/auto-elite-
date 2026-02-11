@@ -4,17 +4,15 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY as string,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID as string
+  apiKey: "AIzaSyAocB-xjAk8-xIIcDLjx72k9I8OK4jHVgE",
+  authDomain: "tlord-1ab38.firebaseapp.com",
+  databaseURL: "https://tlord-1ab38-default-rtdb.firebaseio.com",
+  projectId: "tlord-1ab38",
+  storageBucket: "tlord-1ab38.firebasestorage.app",
+  messagingSenderId: "750743868519",
+  appId: "1:750743868519:web:5a937bc8e75e86a96570c2",
+  measurementId: "G-5MDEM4EWHJ"
 };
-
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  throw new Error('Missing Firebase env vars. Check VITE_FIREBASE_* in your environment.');
-}
 
 const app = initializeApp(firebaseConfig);
 
