@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-const { HashRouter, Routes, Route, Navigate } = ReactRouterDOM;
+const { BrowserRouter, Routes, Route, Navigate } = ReactRouterDOM;
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { collection, doc, getDoc, increment, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import Navbar from './components/Navbar';
@@ -116,7 +116,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <div className="flex flex-col min-h-screen">
         <Routes>
           <Route path="/" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Home vehicles={vehicles} siteSettings={siteSettings} /></PublicLayout>} />
@@ -140,7 +140,7 @@ const App: React.FC = () => {
           </Route>
         </Routes>
       </div>
-    </HashRouter>
+    </BrowserRouter>
   );
 };
 
