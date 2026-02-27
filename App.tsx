@@ -127,6 +127,8 @@ const App: React.FC = () => {
           <Route path="/financing" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Financing /></PublicLayout>} />
           <Route path="/test-drive" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><TestDrive vehicles={vehicles} /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Contact /></PublicLayout>} />
+          <Route path="/admin/" element={<Navigate to="/admin" replace />} />
+          <Route path="/admin/login/" element={<Navigate to="/admin/login" replace />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route
             path="/admin"
