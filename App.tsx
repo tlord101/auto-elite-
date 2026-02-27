@@ -127,11 +127,10 @@ const App: React.FC = () => {
           <Route path="/financing" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Financing /></PublicLayout>} />
           <Route path="/test-drive" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><TestDrive vehicles={vehicles} /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Contact /></PublicLayout>} />
-          <Route path="/admin/" element={<Navigate to="/admin" replace />} />
           <Route path="/admin/login/" element={<Navigate to="/admin/login" replace />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route
-            path="/admin"
+            path="/admin/*"
             element={adminGate(<AdminLayout onLogout={handleAdminLogout} />)}
           >
             <Route index element={<AdminDashboard vehicles={vehicles} />} />
@@ -139,7 +138,9 @@ const App: React.FC = () => {
             <Route path="bookings" element={<AdminBookings vehicles={vehicles} />} />
             <Route path="financing" element={<AdminFinancing />} />
             <Route path="settings" element={<AdminSettings siteSettings={siteSettings} />} />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
     </BrowserRouter>
