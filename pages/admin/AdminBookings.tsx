@@ -1,9 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { Booking, Vehicle } from '../../types';
-import { db } from '../../firebaseClient';
-import { mapBookingDoc } from '../../firebaseData';
+import { subscribeAdminBookings, updateBookingStatus } from '../../api/endpoints';
 
 interface AdminBookingsProps {
   vehicles: Vehicle[];
@@ -13,14 +11,11 @@ const AdminBookings: React.FC<AdminBookingsProps> = ({ vehicles }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
-    const bookingsQuery = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
-    return onSnapshot(bookingsQuery, (snapshot) => {
-      setBookings(snapshot.docs.map(mapBookingDoc));
-    });
+    return subscribeAdminBookings(setBookings);
   }, []);
 
   const updateStatus = (id: string, status: Booking['status']) => {
-    updateDoc(doc(db, 'bookings', id), { status }).catch((error) => {
+    updateBookingStatus(id, status).catch((error) => {
       console.error('Failed to update booking status', error);
     });
   };

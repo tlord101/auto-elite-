@@ -1,19 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { collection, deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { Vehicle, VehicleCategory, VehicleCondition } from '../../types';
-import { db, storage } from '../../firebaseClient';
+import { deleteVehicle, saveVehicle, UploadableImageItem } from '../../api/endpoints';
 
 interface AdminVehiclesProps {
   vehicles: Vehicle[];
-}
-
-interface ImageItem {
-  id: string;
-  url: string;
-  file?: File;
-  isNew: boolean;
 }
 
 const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
@@ -21,7 +12,7 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
+  const [imageItems, setImageItems] = useState<UploadableImageItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
@@ -114,7 +105,7 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
 
   const handleDelete = (id: string) => {
     if (confirm('Are you sure you want to delete this vehicle?')) {
-      deleteDoc(doc(db, 'vehicles', id)).catch((error) => {
+      deleteVehicle(id).catch((error) => {
         console.error('Failed to delete vehicle', error);
       });
     }
@@ -174,65 +165,7 @@ const AdminVehicles: React.FC<AdminVehiclesProps> = ({ vehicles }) => {
     setSaveError('');
     setIsSaving(true);
     try {
-      const docRef = editingVehicle ? doc(db, 'vehicles', editingVehicle.id) : doc(collection(db, 'vehicles'));
-      const vehicleId = docRef.id;
-
-      const uploadMap = new Map<string, string>();
-      const newImageItems = imageItems.filter((item) => item.isNew && item.file);
-
-      await Promise.all(
-        newImageItems.map(async (item) => {
-          const storageRef = ref(storage, `vehicles/${vehicleId}/${item.id}`);
-          await uploadBytes(storageRef, item.file as File);
-          const url = await getDownloadURL(storageRef);
-          uploadMap.set(item.id, url);
-        })
-      );
-
-      const finalImages = imageItems.map((item) => (item.isNew ? uploadMap.get(item.id) || '' : item.url)).filter(Boolean);
-
-      const safeSpecs = formData.specs || {
-        engine: '',
-        transmission: '',
-        drivetrain: '',
-        exteriorColor: '',
-        interiorColor: ''
-      };
-
-      const safePayload = {
-        brand: formData.brand || '',
-        model: formData.model || '',
-        year: Number(formData.year ?? new Date().getFullYear()),
-        price: Number(formData.price ?? 0),
-        category: formData.category || VehicleCategory.CAR,
-        condition: formData.condition || VehicleCondition.NEW,
-        fuelType: formData.fuelType || 'Gasoline',
-        transmission: formData.transmission || 'Automatic',
-        bodyType: formData.bodyType || '',
-        location: formData.location || 'Main Showroom',
-        mileage: Number(formData.mileage ?? 0),
-        description: formData.description || '',
-        status: formData.status || 'available',
-        isFeatured: Boolean(formData.isFeatured),
-        isVerified: Boolean(formData.isVerified)
-      };
-
-      const vehiclePayload = {
-        ...safePayload,
-        specs: safeSpecs,
-        name: `${safePayload.year} ${safePayload.brand} ${safePayload.model}`.trim(),
-        images: finalImages,
-        views: editingVehicle?.views ?? 0,
-        reviews: editingVehicle?.reviews ?? [],
-        updatedAt: serverTimestamp(),
-        ...(editingVehicle ? {} : { createdAt: serverTimestamp() })
-      } as Vehicle;
-
-      if (editingVehicle) {
-        await updateDoc(docRef, vehiclePayload);
-      } else {
-        await setDoc(docRef, vehiclePayload);
-      }
+      await saveVehicle({ editingVehicle, formData, imageItems });
 
       setIsModalOpen(false);
       setEditingVehicle(null);

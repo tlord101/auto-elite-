@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { SiteSettings } from '../../types';
-import { db, storage } from '../../firebaseClient';
+import { saveSiteSettings } from '../../api/endpoints';
 
 interface AdminSettingsProps {
   siteSettings: SiteSettings;
@@ -35,24 +33,7 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ siteSettings }) => {
     setSaveStatus('');
 
     try {
-      let heroImageUrl = formData.heroImageUrl;
-
-      if (heroImageFile) {
-        const storageRef = ref(storage, `site/hero-${Date.now()}-${heroImageFile.name}`);
-        await uploadBytes(storageRef, heroImageFile);
-        heroImageUrl = await getDownloadURL(storageRef);
-      }
-
-      const settingsRef = doc(db, 'siteSettings', 'global');
-      await setDoc(
-        settingsRef,
-        {
-          ...formData,
-          heroImageUrl,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
-      );
+      await saveSiteSettings(formData, heroImageFile);
 
       setSaveStatus('Settings saved successfully.');
     } catch (error) {

@@ -1,22 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from 'firebase/firestore';
 import { FinancingRequest } from '../../types';
-import { db } from '../../firebaseClient';
-import { mapFinancingDoc } from '../../firebaseData';
+import { subscribeAdminFinancing, updateFinancingStatus } from '../../api/endpoints';
 
 const AdminFinancing: React.FC = () => {
   const [requests, setRequests] = useState<FinancingRequest[]>([]);
 
   useEffect(() => {
-    const financingQuery = query(collection(db, 'financingRequests'), orderBy('createdAt', 'desc'));
-    return onSnapshot(financingQuery, (snapshot) => {
-      setRequests(snapshot.docs.map(mapFinancingDoc));
-    });
+    return subscribeAdminFinancing(setRequests);
   }, []);
 
   const updateStatus = (id: string, status: FinancingRequest['status']) => {
-    updateDoc(doc(db, 'financingRequests', id), { status }).catch((error) => {
+    updateFinancingStatus(id, status).catch((error) => {
       console.error('Failed to update financing status', error);
     });
   };

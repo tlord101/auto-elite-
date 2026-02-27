@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { Link } = ReactRouterDOM;
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebaseClient';
+import { submitFinancingRequest } from '../api/endpoints';
 
 interface FinancePlan {
   months: number;
@@ -46,14 +45,12 @@ const Financing: React.FC = () => {
     setSubmitStatus('');
 
     try {
-      await addDoc(collection(db, 'financingRequests'), {
+      await submitFinancingRequest({
         customerName,
         email: customerEmail,
         loanAmount,
         downPayment,
         term: activePlan.months,
-        status: 'pending',
-        createdAt: serverTimestamp()
       });
       setSubmitStatus('Request submitted. Our team will follow up shortly.');
       setCustomerName('');

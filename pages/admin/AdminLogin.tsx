@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { useNavigate } = ReactRouterDOM;
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebaseClient';
+import { getCurrentAdminUser, signInAdmin } from '../../api/endpoints';
 
 const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -12,7 +11,7 @@ const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (auth.currentUser) {
+    if (getCurrentAdminUser()) {
       navigate('/admin');
     }
   }, [navigate]);
@@ -22,7 +21,7 @@ const AdminLogin: React.FC = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInAdmin(email, password);
       navigate('/admin');
     } catch (err) {
       setError('Invalid credentials or access not granted.');

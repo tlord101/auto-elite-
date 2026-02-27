@@ -2,9 +2,8 @@
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 const { useSearchParams, Link } = ReactRouterDOM;
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Vehicle } from '../types';
-import { db } from '../firebaseClient';
+import { submitBookingRequest } from '../api/endpoints';
 
 interface TestDriveProps {
   vehicles: Vehicle[];
@@ -69,7 +68,7 @@ const TestDrive: React.FC<TestDriveProps> = ({ vehicles }) => {
       setSubmitError('');
       try {
         const vehicle = vehicles.find((v) => v.id === formData.vehicleId);
-        await addDoc(collection(db, 'bookings'), {
+        await submitBookingRequest({
           vehicleId: formData.vehicleId,
           vehicleName: vehicle?.name || '',
           customerName: formData.fullName,
@@ -80,8 +79,6 @@ const TestDrive: React.FC<TestDriveProps> = ({ vehicles }) => {
           time: formData.time,
           location: formData.location,
           notes: formData.notes,
-          status: 'pending',
-          createdAt: serverTimestamp()
         });
         setSubmitted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
