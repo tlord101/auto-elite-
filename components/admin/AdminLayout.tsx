@@ -8,7 +8,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
   const navigate = useNavigate();
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const handleLogout = () => {
@@ -16,17 +16,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
     navigate('/');
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: '📊' },
-    { name: 'Vehicles', path: '/admin/vehicles', icon: '🚗' },
-    { name: 'Bookings', path: '/admin/bookings', icon: '📅' },
-    { name: 'Financing', path: '/admin/financing', icon: '💰' },
+  const operationsItems = [
+    { name: 'Dashboard', path: '/admin', icon: '🏠' },
+    { name: 'Manage Vehicles', path: '/admin/vehicles', icon: '🚘' },
+    { name: 'Test Drive Bookings', path: '/admin/bookings', icon: '📅' },
+    { name: 'Financing Requests', path: '/admin/financing', icon: '💳' },
+  ];
+
+  const settingsItems = [
     { name: 'Site Settings', path: '/admin/settings', icon: '⚙️' },
   ];
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900">
-      {/* Mobile Overlay */}
+    <div className="flex h-screen bg-slate-100 overflow-hidden text-slate-900">
       {isMobileOpen && (
         <button
           type="button"
@@ -36,42 +38,71 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
         />
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`bg-gradient-to-b from-slate-900 via-slate-900 to-indigo-900 flex flex-col text-white z-50 transition-all duration-300 lg:static fixed inset-y-0 left-0 ${
+        className={`relative flex flex-col text-white z-50 transition-all duration-300 lg:static fixed inset-y-0 left-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 ${isCollapsed ? 'w-20' : 'w-64'}`}
+        } lg:translate-x-0 ${isCollapsed ? 'w-20' : 'w-72'}`}
       >
-        <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-          <h1 className={`text-2xl font-bold flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?q=80&w=1200&auto=format&fit=crop')] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-slate-950/85" />
+
+        <div className="relative p-6 border-b border-white/10 flex items-center justify-between">
+          <h1 className={`text-xl font-extrabold tracking-tight flex items-center ${isCollapsed ? 'justify-center w-full' : ''}`}>
             <span className={isCollapsed ? '' : 'mr-2'}>🛡️</span>
             <span className={`${isCollapsed ? 'hidden' : 'block'}`}>AutoElite Admin</span>
           </h1>
         </div>
 
-        <nav className="flex-grow px-3 mt-6 space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/admin'}
-              onClick={() => setIsMobileOpen(false)}
-              className={({ isActive }) => 
-                `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl transition-all ${
-                  isActive ? 'bg-white/20 font-bold' : 'hover:bg-white/10'
-                }`
-              }
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className={`${isCollapsed ? 'hidden' : 'block'}`}>{item.name}</span>
-            </NavLink>
-          ))}
+        <nav className="relative flex-grow px-3 py-6 overflow-y-auto">
+          <p className={`px-4 mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ${isCollapsed ? 'hidden' : 'block'}`}>
+            Operations
+          </p>
+          <div className="space-y-1.5 mb-6">
+            {operationsItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/admin'}
+                onClick={() => setIsMobileOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    isActive ? 'bg-indigo-500/40 text-white shadow-lg shadow-indigo-900/40' : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <span className="text-base">{item.icon}</span>
+                <span className={`${isCollapsed ? 'hidden' : 'block'}`}>{item.name}</span>
+              </NavLink>
+            ))}
+          </div>
+
+          <p className={`px-4 mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 ${isCollapsed ? 'hidden' : 'block'}`}>
+            Settings
+          </p>
+          <div className="space-y-1.5">
+            {settingsItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/admin'}
+                onClick={() => setIsMobileOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    isActive ? 'bg-indigo-500/40 text-white shadow-lg shadow-indigo-900/40' : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <span className="text-base">{item.icon}</span>
+                <span className={`${isCollapsed ? 'hidden' : 'block'}`}>{item.name}</span>
+              </NavLink>
+            ))}
+          </div>
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="relative p-4 border-t border-white/10">
           <button 
             onClick={handleLogout}
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl hover:bg-white/10 text-red-200 hover:text-red-100 transition-all`}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-100 transition-all`}
           >
             <span>🚪</span>
             <span className={`${isCollapsed ? 'hidden' : 'block'}`}>Logout</span>
@@ -79,7 +110,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-grow flex flex-col overflow-hidden">
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-3">
@@ -99,7 +129,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
             >
               {isCollapsed ? '→' : '←'}
             </button>
-            <div className="text-slate-500 font-medium">Welcome back, Admin</div>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Control Center</p>
+              <p className="text-sm font-semibold text-slate-700">Welcome back, Admin</p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <button className="p-2 text-slate-400 hover:text-indigo-600">🔔</button>
@@ -109,7 +142,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
           </div>
         </header>
 
-        <main className="flex-grow overflow-auto p-8">
+        <main className="flex-grow overflow-auto p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

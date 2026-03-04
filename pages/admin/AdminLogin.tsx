@@ -31,11 +31,14 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl overflow-hidden shadow-2xl">
-        <div className="p-8 bg-indigo-600 text-white text-center">
-          <h1 className="text-3xl font-bold mb-2">Admin Portal</h1>
-          <p className="text-indigo-100">Please sign in to access the dashboard</p>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1800&auto=format&fit=crop')] bg-cover bg-center" />
+      <div className="absolute inset-0 bg-slate-950/80" />
+
+      <div className="relative max-w-md w-full bg-white rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+        <div className="p-8 bg-gradient-to-r from-slate-900 to-indigo-900 text-white text-center">
+          <h1 className="text-3xl font-black mb-2 tracking-tight">AutoElite Admin</h1>
+          <p className="text-slate-200 text-sm">Sign in to manage inventory, bookings, and financing</p>
         </div>
         
         <form onSubmit={handleLogin} className="p-8 space-y-6">
@@ -76,7 +79,7 @@ const AdminLogin: React.FC = () => {
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-70"
+            className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200/40 disabled:opacity-70"
           >
             {isSubmitting ? 'Signing In...' : 'Login to Dashboard'}
           </button>
