@@ -16,13 +16,18 @@ import {
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { auth, db, storage } from '../firebaseClient';
 import { mapBookingDoc, mapFinancingDoc, mapSiteSettingsDoc, mapVehicleDoc } from '../firebaseData';
-import { Booking, FinancingRequest, SiteSettings, Vehicle, VehicleCategory, VehicleCondition } from '../types';
+import { AdminRole, Booking, FinancingRequest, SiteSettings, Vehicle, VehicleCategory, VehicleCondition } from '../types';
 
 export interface UploadableImageItem {
   id: string;
   url: string;
   file?: File;
   isNew: boolean;
+}
+
+export interface AdminAccess {
+  hasAccess: boolean;
+  role: AdminRole;
 }
 
 export const subscribeVehicles = (onData: (vehicles: Vehicle[]) => void) => {
@@ -92,7 +97,13 @@ export const signOutAdmin = () => signOut(auth);
 export const verifyAdminAccess = async (uid: string) => {
   const adminRef = doc(db, 'admins', uid);
   const adminSnap = await getDoc(adminRef);
-  return adminSnap.exists();
+  if (!adminSnap.exists()) {
+    return { hasAccess: false, role: 'editor' } as AdminAccess;
+  }
+
+  const data = adminSnap.data();
+  const role = (data?.role as AdminRole) || 'editor';
+  return { hasAccess: true, role } as AdminAccess;
 };
 
 export const subscribeAdminBookings = (onData: (bookings: Booking[]) => void) => {
@@ -134,6 +145,19 @@ export const saveSiteSettings = async (settings: SiteSettings, heroImageFile: Fi
     },
     { merge: true }
   );
+};
+
+export const queueEmailDispatch = async (payload: {
+  to: string;
+  subject: string;
+  message: string;
+  type: 'admin_notification' | 'customer_reply' | 'test';
+}) => {
+  await addDoc(collection(db, 'emailQueue'), {
+    ...payload,
+    status: 'pending',
+    createdAt: serverTimestamp()
+  });
 };
 
 export const deleteVehicle = async (vehicleId: string) => {
@@ -200,7 +224,7 @@ export const saveVehicle = async (params: {
     reviews: editingVehicle?.reviews ?? [],
     updatedAt: serverTimestamp(),
     ...(editingVehicle ? {} : { createdAt: serverTimestamp() }),
-  } as Vehicle;
+  };
 
   if (editingVehicle) {
     await updateDoc(docRef, vehiclePayload);

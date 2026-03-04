@@ -61,7 +61,7 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
       </section>
 
       {/* Categories Section - Re-styled as per video */}
-      <section className="max-w-7xl mx-auto px-4 py-24">
+      {siteSettings.sections.categoriesEnabled && <section className="max-w-7xl mx-auto px-4 py-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {CATEGORIES.map((cat) => (
             <Link 
@@ -89,10 +89,10 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
             </Link>
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* Special Offers Section - New as per video */}
-      <section className="bg-slate-50 py-24 border-y border-slate-200">
+      {siteSettings.sections.offersEnabled && <section className="bg-slate-50 py-24 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">Special Offers</p>
@@ -121,10 +121,10 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
              </Link>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Why Choose Us Section - New as per video */}
-      <section className="py-24 max-w-7xl mx-auto px-4">
+      {siteSettings.sections.whyChooseUsEnabled && <section className="py-24 max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">Why AutoElite</p>
           <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">Why Choose Us</h2>
@@ -146,10 +146,10 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* Featured Vehicles - Updated existing section */}
-      <section className="bg-slate-900 py-24 overflow-hidden relative">
+      {siteSettings.sections.featuredEnabled && <section className="bg-slate-900 py-24 overflow-hidden relative">
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
             <div>
@@ -175,10 +175,10 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
             </div>
           )}
         </div>
-      </section>
+      </section>}
 
       {/* Testimonials Section - New as per video */}
-      <section className="py-24 max-w-7xl mx-auto px-4">
+      {siteSettings.sections.testimonialsEnabled && <section className="py-24 max-w-7xl mx-auto px-4">
         <div className="text-center mb-16">
           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em] mb-3">Testimonials</p>
           <h2 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">What Our Customers Say</h2>
@@ -211,10 +211,10 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* Ready to Find Your Dream Vehicle Banner - New as per video */}
-      <section className="max-w-7xl mx-auto px-4 py-24">
+      {siteSettings.sections.ctaEnabled && <section className="max-w-7xl mx-auto px-4 py-24">
         <div className="bg-slate-900 rounded-[4rem] p-16 md:p-24 text-center text-white relative overflow-hidden shadow-2xl">
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 left-0 w-full h-full" style={{ backgroundImage: 'radial-gradient(circle, #4f46e5 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -232,7 +232,7 @@ const Home: React.FC<HomeProps> = ({ vehicles, siteSettings }) => {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
     </div>
   );
 };

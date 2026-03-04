@@ -9,7 +9,27 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   heroBadge: 'Welcome to the Elite Circle',
   heroTitle: 'DRIVE THE EXCEPTIONAL',
   heroSubtitle: 'Curated premium inventory for the modern connoisseur. Experience unparalleled quality and service.',
-  heroImageUrl: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000'
+  heroImageUrl: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000',
+  sections: {
+    categoriesEnabled: true,
+    offersEnabled: true,
+    whyChooseUsEnabled: true,
+    featuredEnabled: true,
+    testimonialsEnabled: true,
+    ctaEnabled: true
+  },
+  emailSettings: {
+    provider: 'smtp',
+    senderName: 'AutoElite',
+    senderEmail: 'noreply@autoelite.com',
+    replyToEmail: 'support@autoelite.com',
+    notificationsEmail: 'admin@autoelite.com',
+    smtpHost: '',
+    smtpPort: 587,
+    smtpSecure: false,
+    smtpUsername: '',
+    smtpPassword: ''
+  }
 };
 
 export const CATEGORIES = [

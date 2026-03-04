@@ -1,20 +1,24 @@
 
 import React from 'react';
-import { Vehicle } from '../../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Booking, Vehicle } from '../../types';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AdminDashboardProps {
   vehicles: Vehicle[];
+  bookings: Booking[];
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ vehicles }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ vehicles, bookings }) => {
   const topVehicles = [...vehicles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+  const soldVehicles = vehicles.filter((v) => v.status === 'sold').length;
+  const pendingVehicles = vehicles.filter((v) => v.status === 'pending').length;
+  const testDriveBookings = bookings.length;
   
   const stats = [
-    { title: 'Fleet Velocity', value: vehicles.length, color: 'bg-indigo-600', trend: 'Active' },
-    { title: 'Market Reach', value: vehicles.reduce((acc, v) => acc + (v.views || 0), 0).toLocaleString(), color: 'bg-emerald-600', trend: 'Total Views' },
-    { title: 'Lead Conv.', value: '14.2%', color: 'bg-amber-600', trend: '+2.1% week' },
-    { title: 'Projected ARR', value: '$8.4M', color: 'bg-rose-600', trend: 'Qualified' },
+    { title: 'Total Vehicles', value: vehicles.length, color: 'bg-indigo-600', trend: 'Inventory' },
+    { title: 'Vehicles Sold', value: soldVehicles, color: 'bg-emerald-600', trend: 'Closed Deals' },
+    { title: 'Pending Listings', value: pendingVehicles, color: 'bg-amber-600', trend: 'Needs Review' },
+    { title: 'Test Drive Bookings', value: testDriveBookings, color: 'bg-rose-600', trend: 'Appointments' },
   ];
 
   const viewData = topVehicles.map(v => ({ name: v.model, views: v.views || 0 }));

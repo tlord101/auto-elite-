@@ -26,6 +26,32 @@ export interface SiteSettings {
   heroTitle: string;
   heroSubtitle: string;
   heroImageUrl: string;
+  sections: SiteSections;
+  emailSettings: EmailSettings;
+}
+
+export type AdminRole = 'super_admin' | 'manager' | 'editor';
+
+export interface SiteSections {
+  categoriesEnabled: boolean;
+  offersEnabled: boolean;
+  whyChooseUsEnabled: boolean;
+  featuredEnabled: boolean;
+  testimonialsEnabled: boolean;
+  ctaEnabled: boolean;
+}
+
+export interface EmailSettings {
+  provider: 'smtp' | 'sendgrid' | 'mailgun' | 'custom';
+  senderName: string;
+  senderEmail: string;
+  replyToEmail: string;
+  notificationsEmail: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUsername: string;
+  smtpPassword: string;
 }
 
 export interface Vehicle {

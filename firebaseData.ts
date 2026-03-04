@@ -83,6 +83,26 @@ export const mapSiteSettingsDoc = (data?: DocumentData | null): SiteSettings => 
     heroBadge: data?.heroBadge ?? 'Welcome to the Elite Circle',
     heroTitle: data?.heroTitle ?? 'DRIVE THE EXCEPTIONAL',
     heroSubtitle: data?.heroSubtitle ?? 'Curated premium inventory for the modern connoisseur. Experience unparalleled quality and service.',
-    heroImageUrl: data?.heroImageUrl ?? 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000'
+    heroImageUrl: data?.heroImageUrl ?? 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000',
+    sections: {
+      categoriesEnabled: data?.sections?.categoriesEnabled ?? true,
+      offersEnabled: data?.sections?.offersEnabled ?? true,
+      whyChooseUsEnabled: data?.sections?.whyChooseUsEnabled ?? true,
+      featuredEnabled: data?.sections?.featuredEnabled ?? true,
+      testimonialsEnabled: data?.sections?.testimonialsEnabled ?? true,
+      ctaEnabled: data?.sections?.ctaEnabled ?? true
+    },
+    emailSettings: {
+      provider: data?.emailSettings?.provider ?? 'smtp',
+      senderName: data?.emailSettings?.senderName ?? 'AutoElite',
+      senderEmail: data?.emailSettings?.senderEmail ?? 'noreply@autoelite.com',
+      replyToEmail: data?.emailSettings?.replyToEmail ?? 'support@autoelite.com',
+      notificationsEmail: data?.emailSettings?.notificationsEmail ?? 'admin@autoelite.com',
+      smtpHost: data?.emailSettings?.smtpHost ?? '',
+      smtpPort: Number(data?.emailSettings?.smtpPort ?? 587),
+      smtpSecure: Boolean(data?.emailSettings?.smtpSecure),
+      smtpUsername: data?.emailSettings?.smtpUsername ?? '',
+      smtpPassword: data?.emailSettings?.smtpPassword ?? ''
+    }
   };
 };
