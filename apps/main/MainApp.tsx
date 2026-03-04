@@ -11,7 +11,6 @@ import Sell from '../../pages/Sell';
 import Financing from '../../pages/Financing';
 import TestDrive from '../../pages/TestDrive';
 import Contact from '../../pages/Contact';
-import AIChatAssistant from '../../components/AIChatAssistant';
 import { DEFAULT_SITE_SETTINGS } from '../../constants';
 import { SiteSettings, Vehicle } from '../../types';
 import { incrementVehicleViews, subscribeSiteSettings, subscribeVehicles } from '../../api/endpoints';
@@ -44,25 +43,24 @@ const MainApp: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Routes>
-        <Route path="/" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Home vehicles={vehicles} siteSettings={siteSettings} /></PublicLayout>} />
-        <Route path="/browse" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Browse vehicles={vehicles} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
-        <Route path="/vehicle/:id" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Details vehicles={vehicles} incrementViews={handleIncrementViews} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
-        <Route path="/about" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><About /></PublicLayout>} />
-        <Route path="/sell" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Sell /></PublicLayout>} />
-        <Route path="/financing" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Financing /></PublicLayout>} />
-        <Route path="/test-drive" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><TestDrive vehicles={vehicles} /></PublicLayout>} />
-        <Route path="/contact" element={<PublicLayout vehicles={vehicles} siteSettings={siteSettings}><Contact /></PublicLayout>} />
+        <Route path="/" element={<PublicLayout siteSettings={siteSettings}><Home vehicles={vehicles} siteSettings={siteSettings} /></PublicLayout>} />
+        <Route path="/browse" element={<PublicLayout siteSettings={siteSettings}><Browse vehicles={vehicles} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
+        <Route path="/vehicle/:id" element={<PublicLayout siteSettings={siteSettings}><Details vehicles={vehicles} incrementViews={handleIncrementViews} wishlist={wishlist} toggleWishlist={toggleWishlist} /></PublicLayout>} />
+        <Route path="/about" element={<PublicLayout siteSettings={siteSettings}><About /></PublicLayout>} />
+        <Route path="/sell" element={<PublicLayout siteSettings={siteSettings}><Sell /></PublicLayout>} />
+        <Route path="/financing" element={<PublicLayout siteSettings={siteSettings}><Financing /></PublicLayout>} />
+        <Route path="/test-drive" element={<PublicLayout siteSettings={siteSettings}><TestDrive vehicles={vehicles} /></PublicLayout>} />
+        <Route path="/contact" element={<PublicLayout siteSettings={siteSettings}><Contact /></PublicLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );
 };
 
-const PublicLayout: React.FC<{ children: React.ReactNode; vehicles: Vehicle[]; siteSettings: SiteSettings }> = ({ children, vehicles, siteSettings }) => (
+const PublicLayout: React.FC<{ children: React.ReactNode; siteSettings: SiteSettings }> = ({ children, siteSettings }) => (
   <>
     <Navbar siteName={siteSettings.siteName} />
     <main className="flex-grow pt-16">{children}</main>
-    <AIChatAssistant vehicles={vehicles} />
     <Footer siteName={siteSettings.siteName} />
   </>
 );

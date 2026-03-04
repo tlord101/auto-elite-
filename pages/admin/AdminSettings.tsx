@@ -11,11 +11,39 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ siteSettings }) => {
   const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
   const [heroImagePreview, setHeroImagePreview] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isQueueingEmail, setIsQueueingEmail] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [emailSubject, setEmailSubject] = useState('AutoElite admin test email');
   const [emailMessage, setEmailMessage] = useState('This is a test email from the admin dashboard.');
   const [emailStatus, setEmailStatus] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isValidEmail = (value: string) => /^\S+@\S+\.\S+$/.test(value.trim());
+
+  const validateEmailSetup = () => {
+    const emailSettings = formData.emailSettings;
+
+    if (!isValidEmail(emailSettings.notificationsEmail)) {
+      return 'Notifications email is invalid.';
+    }
+
+    if (!isValidEmail(emailSettings.senderEmail)) {
+      return 'Sender email is invalid.';
+    }
+
+    if (emailSettings.replyToEmail && !isValidEmail(emailSettings.replyToEmail)) {
+      return 'Reply-to email is invalid.';
+    }
+
+    if (emailSettings.provider === 'smtp') {
+      if (!emailSettings.smtpHost.trim()) return 'SMTP host is required.';
+      if (!emailSettings.smtpPort || emailSettings.smtpPort <= 0) return 'SMTP port must be valid.';
+      if (!emailSettings.smtpUsername.trim()) return 'SMTP username is required.';
+      if (!emailSettings.smtpPassword.trim()) return 'SMTP password is required.';
+    }
+
+    return '';
+  };
 
   useEffect(() => {
     setFormData(siteSettings);
@@ -48,18 +76,39 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ siteSettings }) => {
   };
 
   const handleSendTestEmail = async () => {
+    const setupError = validateEmailSetup();
+    if (setupError) {
+      setEmailStatus(setupError);
+      return;
+    }
+
+    if (!emailSubject.trim() || !emailMessage.trim()) {
+      setEmailStatus('Email subject and message are required.');
+      return;
+    }
+
     setEmailStatus('');
+    setIsQueueingEmail(true);
     try {
+      await saveSiteSettings(formData, null);
+
       await queueEmailDispatch({
         to: formData.emailSettings.notificationsEmail,
         subject: emailSubject,
         message: emailMessage,
-        type: 'test'
+        type: 'test',
+        emailSettings: formData.emailSettings,
+        metadata: {
+          triggeredBy: 'admin_settings',
+          triggeredAt: new Date().toISOString()
+        }
       });
-      setEmailStatus('Test email queued successfully.');
+      setEmailStatus('Test email queued successfully with current settings.');
     } catch (error) {
       console.error('Failed to queue test email', error);
       setEmailStatus('Unable to queue test email. Please try again.');
+    } finally {
+      setIsQueueingEmail(false);
     }
   };
 
@@ -320,9 +369,10 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ siteSettings }) => {
             <button
               type="button"
               onClick={handleSendTestEmail}
+              disabled={isQueueingEmail}
               className="px-6 py-3 rounded-xl bg-slate-900 text-white font-black uppercase text-xs"
             >
-              Queue Test Email
+              {isQueueingEmail ? 'Queueing...' : 'Queue Test Email'}
             </button>
             {emailStatus && (
               <div className={`text-sm font-bold ${emailStatus.includes('successfully') ? 'text-emerald-600' : 'text-rose-600'}`}>

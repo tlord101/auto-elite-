@@ -152,9 +152,28 @@ export const queueEmailDispatch = async (payload: {
   subject: string;
   message: string;
   type: 'admin_notification' | 'customer_reply' | 'test';
+  emailSettings?: SiteSettings['emailSettings'];
+  metadata?: Record<string, unknown>;
 }) => {
+  if (!payload.to?.trim() || !payload.subject?.trim() || !payload.message?.trim()) {
+    throw new Error('Email payload is missing required fields.');
+  }
+
   await addDoc(collection(db, 'emailQueue'), {
     ...payload,
+    provider: payload.emailSettings?.provider || 'smtp',
+    senderName: payload.emailSettings?.senderName || '',
+    senderEmail: payload.emailSettings?.senderEmail || '',
+    replyToEmail: payload.emailSettings?.replyToEmail || '',
+    smtp: payload.emailSettings
+      ? {
+          host: payload.emailSettings.smtpHost || '',
+          port: payload.emailSettings.smtpPort || 587,
+          secure: Boolean(payload.emailSettings.smtpSecure),
+          username: payload.emailSettings.smtpUsername || '',
+          password: payload.emailSettings.smtpPassword || '',
+        }
+      : null,
     status: 'pending',
     createdAt: serverTimestamp()
   });
