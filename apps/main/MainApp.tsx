@@ -17,7 +17,17 @@ import { incrementVehicleViews, subscribeSiteSettings, subscribeVehicles } from 
 
 const MainApp: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [wishlist, setWishlist] = useState<string[]>(() => JSON.parse(localStorage.getItem('wishlist') || '[]'));
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('wishlist');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn('Invalid wishlist cache. Resetting local wishlist.', error);
+      return [];
+    }
+  });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SITE_SETTINGS);
 
   useEffect(() => {
