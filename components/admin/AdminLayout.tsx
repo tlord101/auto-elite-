@@ -39,7 +39,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
       )}
 
       <aside
-        className={`relative flex flex-col text-white z-50 transition-all duration-300 lg:static fixed inset-y-0 left-0 ${
+        className={`flex flex-col text-white z-50 transition-all duration-300 lg:static fixed inset-y-0 left-0 ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 ${isCollapsed ? 'w-20' : 'w-72'}`}
       >
