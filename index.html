@@ -8,8 +8,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="bg-slate-50 text-slate-900">
-    <div id="root"></div>
-    <!-- Main Entry Point -->
+        <div id="root">
+            <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#f8fafc;color:#0f172a;font-family:Inter,sans-serif;">
+                <div style="width:100%;max-width:720px;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,0.08);">
+                    <p style="font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:#475569;margin:0 0 8px;">AutoElite</p>
+                    <h1 style="font-size:24px;line-height:1.2;margin:0 0 10px;font-weight:800;">Loading application...</h1>
+                    <p style="font-size:14px;line-height:1.6;color:#334155;margin:0 0 16px;">
+                        If this screen does not change in a few seconds, refresh the page.
+                        You can also open the admin login directly using the link below.
+                    </p>
+                    <a href="/admin/login" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Open Admin Login</a>
+                </div>
+            </div>
+        </div>
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
