@@ -29,12 +29,6 @@ const AdminApp: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminRole, setAdminRole] = useState<AdminRole>('editor');
 
-  useEffect(() => subscribeVehicles(setVehicles), []);
-
-  useEffect(() => subscribeSiteSettings(setSiteSettings), []);
-
-  useEffect(() => subscribeAdminBookings(setBookings), []);
-
   useEffect(() => {
     return observeAdminAuth(async (user) => {
       if (!user) {
@@ -67,6 +61,25 @@ const AdminApp: React.FC = () => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setVehicles([]);
+      setBookings([]);
+      setSiteSettings(DEFAULT_SITE_SETTINGS);
+      return;
+    }
+
+    const unsubscribeVehicles = subscribeVehicles(setVehicles);
+    const unsubscribeSiteSettings = subscribeSiteSettings(setSiteSettings);
+    const unsubscribeBookings = subscribeAdminBookings(setBookings);
+
+    return () => {
+      unsubscribeVehicles();
+      unsubscribeSiteSettings();
+      unsubscribeBookings();
+    };
+  }, [isAdmin]);
 
   const adminGate = (children: React.ReactNode) => {
     if (!authReady) {

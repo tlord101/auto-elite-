@@ -32,21 +32,35 @@ export interface AdminAccess {
 
 export const subscribeVehicles = (onData: (vehicles: Vehicle[]) => void) => {
   const vehicleQuery = query(collection(db, 'vehicles'), orderBy('createdAt', 'desc'));
-  return onSnapshot(vehicleQuery, (snapshot) => {
-    onData(snapshot.docs.map(mapVehicleDoc));
-  });
+  return onSnapshot(
+    vehicleQuery,
+    (snapshot) => {
+      onData(snapshot.docs.map(mapVehicleDoc));
+    },
+    (error) => {
+      console.error('Failed to subscribe vehicles', error);
+      onData([]);
+    }
+  );
 };
 
 export const subscribeSiteSettings = (onData: (settings: SiteSettings) => void) => {
   const settingsRef = doc(db, 'siteSettings', 'global');
-  return onSnapshot(settingsRef, (snapshot) => {
-    if (!snapshot.exists()) {
-      onData(mapSiteSettingsDoc(null));
-      return;
-    }
+  return onSnapshot(
+    settingsRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        onData(mapSiteSettingsDoc(null));
+        return;
+      }
 
-    onData(mapSiteSettingsDoc(snapshot.data()));
-  });
+      onData(mapSiteSettingsDoc(snapshot.data()));
+    },
+    (error) => {
+      console.error('Failed to subscribe site settings', error);
+      onData(mapSiteSettingsDoc(null));
+    }
+  );
 };
 
 export const incrementVehicleViews = async (vehicleId: string) => {
@@ -108,9 +122,16 @@ export const verifyAdminAccess = async (uid: string) => {
 
 export const subscribeAdminBookings = (onData: (bookings: Booking[]) => void) => {
   const bookingsQuery = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
-  return onSnapshot(bookingsQuery, (snapshot) => {
-    onData(snapshot.docs.map(mapBookingDoc));
-  });
+  return onSnapshot(
+    bookingsQuery,
+    (snapshot) => {
+      onData(snapshot.docs.map(mapBookingDoc));
+    },
+    (error) => {
+      console.error('Failed to subscribe bookings', error);
+      onData([]);
+    }
+  );
 };
 
 export const updateBookingStatus = (id: string, status: Booking['status']) =>
