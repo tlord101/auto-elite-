@@ -80,10 +80,11 @@ const AdminApp: React.FC = () => {
 
   return (
     <Routes>
+      <Route index element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="login/" element={<Navigate to="/admin/login" replace />} />
       <Route path="login" element={<AdminLogin />} />
       <Route element={adminGate(<AdminLayout onLogout={signOutAdmin} />)}>
-        <Route index element={<AdminDashboard vehicles={vehicles} bookings={bookings} />} />
+        <Route path="dashboard" element={<AdminDashboard vehicles={vehicles} bookings={bookings} />} />
         <Route path="vehicles" element={<AdminVehicles vehicles={vehicles} />} />
         <Route path="bookings" element={<AdminBookings vehicles={vehicles} />} />
         <Route path="financing" element={<AdminFinancing />} />
@@ -93,13 +94,13 @@ const AdminApp: React.FC = () => {
             adminRole === 'super_admin' || adminRole === 'manager' ? (
               <AdminSettings siteSettings={siteSettings} />
             ) : (
-              <Navigate to="/admin" replace />
+              <Navigate to="/admin/dashboard" replace />
             )
           }
         />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Route>
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
   );
 };

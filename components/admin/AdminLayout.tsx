@@ -17,7 +17,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
   };
 
   const operationsItems = [
-    { name: 'Dashboard', path: '/admin', icon: '🏠' },
+    { name: 'Dashboard', path: '/admin/dashboard', icon: '🏠' },
     { name: 'Manage Vehicles', path: '/admin/vehicles', icon: '🚘' },
     { name: 'Test Drive Bookings', path: '/admin/bookings', icon: '📅' },
     { name: 'Financing Requests', path: '/admin/financing', icon: '💳' },
@@ -62,7 +62,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === '/admin'}
+                end={item.path === '/admin/dashboard'}
                 onClick={() => setIsMobileOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -84,7 +84,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === '/admin'}
+                end={item.path === '/admin/dashboard'}
                 onClick={() => setIsMobileOpen(false)}
                 className={({ isActive }) =>
                   `flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-xl text-sm font-semibold transition-all ${

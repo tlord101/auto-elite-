@@ -12,7 +12,7 @@ const AdminLogin: React.FC = () => {
 
   useEffect(() => {
     if (getCurrentAdminUser()) {
-      navigate('/admin');
+      navigate('/admin/dashboard');
     }
   }, [navigate]);
 
@@ -22,7 +22,7 @@ const AdminLogin: React.FC = () => {
     setIsSubmitting(true);
     try {
       await signInAdmin(email, password);
-      navigate('/admin');
+      navigate('/admin/dashboard');
     } catch (err) {
       setError('Invalid credentials or access not granted.');
     } finally {
