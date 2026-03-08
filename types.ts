@@ -30,8 +30,6 @@ export interface SiteSettings {
   emailSettings: EmailSettings;
 }
 
-export type AdminRole = 'super_admin' | 'manager' | 'editor';
-
 export interface SiteSections {
   categoriesEnabled: boolean;
   offersEnabled: boolean;

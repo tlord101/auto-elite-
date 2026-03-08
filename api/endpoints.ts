@@ -1,10 +1,8 @@
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from 'firebase/auth';
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
-  getDoc,
   increment,
   onSnapshot,
   orderBy,
@@ -14,20 +12,15 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { auth, db, storage } from '../firebaseClient';
-import { mapBookingDoc, mapFinancingDoc, mapSiteSettingsDoc, mapVehicleDoc } from '../firebaseData';
-import { AdminRole, Booking, FinancingRequest, SiteSettings, Vehicle, VehicleCategory, VehicleCondition } from '../types';
+import { db, storage } from '../firebaseClient';
+import { mapSiteSettingsDoc, mapVehicleDoc } from '../firebaseData';
+import { SiteSettings, Vehicle, VehicleCategory, VehicleCondition } from '../types';
 
 export interface UploadableImageItem {
   id: string;
   url: string;
   file?: File;
   isNew: boolean;
-}
-
-export interface AdminAccess {
-  hasAccess: boolean;
-  role: AdminRole;
 }
 
 export const subscribeVehicles = (onData: (vehicles: Vehicle[]) => void) => {
@@ -99,53 +92,6 @@ export const submitFinancingRequest = async (payload: {
     createdAt: serverTimestamp(),
   });
 };
-
-export const observeAdminAuth = (onData: (user: User | null) => void) => onAuthStateChanged(auth, onData);
-
-export const getCurrentAdminUser = () => auth.currentUser;
-
-export const signInAdmin = (email: string, password: string) => signInWithEmailAndPassword(auth, email, password);
-
-export const signOutAdmin = () => signOut(auth);
-
-export const verifyAdminAccess = async (uid: string) => {
-  const adminRef = doc(db, 'admins', uid);
-  const adminSnap = await getDoc(adminRef);
-  if (!adminSnap.exists()) {
-    return { hasAccess: false, role: 'editor' } as AdminAccess;
-  }
-
-  const data = adminSnap.data();
-  const role = (data?.role as AdminRole) || 'editor';
-  return { hasAccess: true, role } as AdminAccess;
-};
-
-export const subscribeAdminBookings = (onData: (bookings: Booking[]) => void) => {
-  const bookingsQuery = query(collection(db, 'bookings'), orderBy('createdAt', 'desc'));
-  return onSnapshot(
-    bookingsQuery,
-    (snapshot) => {
-      onData(snapshot.docs.map(mapBookingDoc));
-    },
-    (error) => {
-      console.error('Failed to subscribe bookings', error);
-      onData([]);
-    }
-  );
-};
-
-export const updateBookingStatus = (id: string, status: Booking['status']) =>
-  updateDoc(doc(db, 'bookings', id), { status });
-
-export const subscribeAdminFinancing = (onData: (requests: FinancingRequest[]) => void) => {
-  const financingQuery = query(collection(db, 'financingRequests'), orderBy('createdAt', 'desc'));
-  return onSnapshot(financingQuery, (snapshot) => {
-    onData(snapshot.docs.map(mapFinancingDoc));
-  });
-};
-
-export const updateFinancingStatus = (id: string, status: FinancingRequest['status']) =>
-  updateDoc(doc(db, 'financingRequests', id), { status });
 
 export const saveSiteSettings = async (settings: SiteSettings, heroImageFile: File | null) => {
   let heroImageUrl = settings.heroImageUrl;
