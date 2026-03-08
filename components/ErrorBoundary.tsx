@@ -5,7 +5,13 @@ interface ErrorBoundaryState {
   errorMessage: string;
 }
 
-class ErrorBoundary extends React.Component<React.PropsWithChildren, ErrorBoundaryState> {
+interface ErrorBoundaryProps {
+  children?: React.ReactNode;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  declare props: Readonly<ErrorBoundaryProps>;
+
   state: ErrorBoundaryState = {
     hasError: false,
     errorMessage: ''
